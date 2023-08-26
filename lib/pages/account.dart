@@ -40,7 +40,7 @@ Widget buildEmail(){
         height: 60,
         child: TextField(
           controller: ce,
-          keyboardType: TextInputType.numberWithOptions(),
+          keyboardType: TextInputType.emailAddress,
           style: TextStyle(
               color: Color(0xFF5181EF),
               fontWeight: FontWeight.bold,
@@ -396,7 +396,7 @@ class _AccountState extends State<Account>{
   }
   Future<String> _getName() async{
     final inist = await SharedPreferences.getInstance();
-    String name1 = inist.getString("Fname") ?? "Default Name";
+    String name1 = inist.getString("email") ?? "Default Name";
     if(name1==null)
       name1= "";
     setState(() {
@@ -409,26 +409,25 @@ class _AccountState extends State<Account>{
   }
   Future<void> _setName(String value) async{
     final inist=await SharedPreferences.getInstance();
-    inist.setString("Fname", value);
+    inist.setString("email", value);
   }
   Future<String> login(String email,String password) async {
     setState(() {
       loadig=true;
     });
-    login2(email,password);
     Map bd={
-      "id": email,
-      "pwd": password
+      "email": email,
+      "password": password
     };
     try {
-      var response = await http.post(Uri.parse(
-          "https://n5eag73vbi.execute-api.us-east-1.amazonaws.com/seliFunction"),
-        body: json.encode(bd),);
+      var response =await http.post(Uri.parse("https://scmp.xpertbotacademy.online/api/login"),
+        headers: {"Content-Type": "application/json"},
+        body:json.encode(bd),
+      );
       data=json.decode(response.body);
-      if(data['code']==200){
-        data['id']=email;
-        _setName("Carlos");
-        Navigator.pushReplacementNamed(context, '/menu',arguments: data);
+      if(data['status']){
+        //to do after
+        showAlertDialog(context, "SUCCESS", "Authentication Successful");
       }else{
         showAlertDialog(context,"ERROR","incorrect id or password");
       }
@@ -444,36 +443,23 @@ class _AccountState extends State<Account>{
       return "";
     });
   }
-  Future<String> login2(String email,String password) async {
-    Map bd={
-      "uid": email,
-      "upassword": password
-    };
-    try {
-      var response = await http.post(Uri.parse(
-          "https://spwy0ag0oe.execute-api.us-east-1.amazonaws.com/updateDB"),
-        body: json.encode(bd),);
-    }catch(e){
-      showAlertDialog(context,"No Internet","Check your internet connection.");
-    }
-    return "";
-  }
+
   Future<String> createAccount(String fname,String lname,String email,String password) async {
     setState(() {
       loadig=true;
     });
     Map bd={
-      "fname":fname,
-      "lname":lname,
+      "name": fname+" "+lname,
       "email": email,
       "password": password
     };
     try{
-      var response =await http.post(Uri.parse("https://3vj8wbi73j.execute-api.us-east-1.amazonaws.com/signupuser"),
+      var response =await http.post(Uri.parse("https://scmp.xpertbotacademy.online/api/register"),
+        headers: {"Content-Type": "application/json"},
         body:json.encode(bd),
       );
       data=json.decode(response.body);
-      if(data['response']==200) {
+      if(data['status']) {
         setState(() {
           a++;
         });
@@ -483,6 +469,7 @@ class _AccountState extends State<Account>{
         showAlertDialog(context,"ERROR","Email already been used");
     }catch(e){
       showAlertDialog(context,"No Internet","Check your internet connection.");
+      print(e.toString());
     }
     return Future.delayed(Duration(seconds: 3),(){
       setState(() {
