@@ -1,9 +1,12 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 import 'package:shared_preferences/shared_preferences.dart';
+
+import '../firebaseNotification/fireNotification.dart';
 class Account extends StatefulWidget {
   const Account({Key? key}) : super(key: key);
 
@@ -218,10 +221,40 @@ class _AccountState extends State<Account>{
   int a=1;
   bool loadig=false;
   String namo='';
+  bool isDataInitialized = false;
   @override
+  void initState() {
+    super.initState();
+    _initializeData();
+  }
+
+  Future<void> _initializeData() async {
+    try {
+      namo = await _getToken() as String;
+      if (namo != "") {
+        final bool tokenVerified = await verifyToken(namo);
+        if (tokenVerified) {
+          await Firebase.initializeApp();
+          await FirebaseApi().initNotification(namo);
+          Navigator.pushReplacementNamed(context, '/menu',arguments: namo);
+        }
+      }
+      setState(() {
+        isDataInitialized=true;
+      });
+    } catch (e) {
+      print('Error in _initializeData: $e');
+      // You can also display the error using your showAlertDialog method
+      // showAlertDialog(context, "Error", e.toString());
+    }finally{
+      setState(() {
+        isDataInitialized=true;
+      });
+    }
+  }
   Widget build(BuildContext context){
     //Here
-    _getName();
+
     if(a%2==0)
       return Scaffold(
         body: AnnotatedRegion<SystemUiOverlayStyle>(
@@ -309,7 +342,7 @@ class _AccountState extends State<Account>{
       ),
 
       );
-    else
+    else if(a%2==1)
       return Scaffold(
         body: AnnotatedRegion<SystemUiOverlayStyle>(
           value: SystemUiOverlayStyle.light,
@@ -380,9 +413,12 @@ class _AccountState extends State<Account>{
               ],
             ),
           ),
-        ),floatingActionButton: this.namo!=""?FloatingActionButton.extended(
+        )
+        ,floatingActionButton: this.namo!=""?FloatingActionButton.extended(
         onPressed: (){
-          a=a+1;
+          setState(() {
+            a++;
+          });
 
         },
         label: Text("SignUP",style: TextStyle(
@@ -390,13 +426,19 @@ class _AccountState extends State<Account>{
         ),),
         icon: Icon(Icons.app_registration,color: Color(0xFF4E3FD9),),
         backgroundColor: Color(0xFF5181EF),
-      ):FloatingActionButton.extended(onPressed: (){},label: Text("Welcome"),),
-
+      ):FloatingActionButton.extended(onPressed: (){setState(() {
+        a++;
+      });},label: Text("Sign Up"),),
       );
+    else{
+      return Center(
+        child: CircularProgressIndicator(), // Replace with your splash screen UI
+      );
+    }
   }
-  Future<String> _getName() async{
+  Future<String> _getToken() async{
     final inist = await SharedPreferences.getInstance();
-    String name1 = inist.getString("email") ?? "Default Name";
+    String name1 = inist.getString("token") ?? "";
     if(name1==null)
       name1= "";
     setState(() {
@@ -407,9 +449,9 @@ class _AccountState extends State<Account>{
   Future<String> _getNu() async{
     return "";
   }
-  Future<void> _setName(String value) async{
+  Future<void> _setToken(String value) async{
     final inist=await SharedPreferences.getInstance();
-    inist.setString("email", value);
+    inist.setString("token", value);
   }
   Future<String> login(String email,String password) async {
     setState(() {
@@ -427,12 +469,15 @@ class _AccountState extends State<Account>{
       data=json.decode(response.body);
       if(data['status']){
         //to do after
-        showAlertDialog(context, "SUCCESS", "Authentication Successful");
+        _setToken("Bearer "+data['token']);
+        await Firebase.initializeApp();
+        await FirebaseApi().initNotification("Bearer "+data['token']);
+        Navigator.pushReplacementNamed(context, '/menu',arguments: "Bearer "+data['token']);
       }else{
         showAlertDialog(context,"ERROR","incorrect id or password");
       }
     }catch(e){
-      showAlertDialog(context,"No Internet","Check your internet connection.");
+      showAlertDialog(context,"No Internet",e.toString());
     }
     return Future.delayed(Duration(seconds: 3),(){
       setState(() {
@@ -443,7 +488,27 @@ class _AccountState extends State<Account>{
       return "";
     });
   }
+  Future<bool> verifyToken(String authorizationHeader) async {
+    String url="https://scmp.xpertbotacademy.online/api/rememberMe";
+    try {
+      final response = await http.post(
+        Uri.parse(url),
+        headers: <String, String>{
+          'Authorization': authorizationHeader,
+        },
+      );
 
+      if (response.statusCode == 200) {
+        return true;
+      } else {
+        return false;
+      }
+    } catch (e) {
+      // Handle any exceptions that occur during the request
+      print('Error: $e');
+      return false;
+    }
+  }
   Future<String> createAccount(String fname,String lname,String email,String password) async {
     setState(() {
       loadig=true;

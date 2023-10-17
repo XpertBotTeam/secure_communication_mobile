@@ -34,7 +34,16 @@ dependencies:
   flutter_lints: ^2.0.0
   flutter_native_splash: any
   http: any
+  grouped_list: any
+  clipboard: any
+  intl: any
   shared_preferences: any
+  hidden_drawer_menu: any
+  url_launcher: ^6.1.8
+  firebase_core: ^2.17.0
+  firebase_messaging: ^14.6.9
+  geolocator: ^7.6.0
+  permission_handler: any
 flutter_native_splash:
   color: "#D2D9FA"
   image: images/logo.png

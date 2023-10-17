@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "309511414057",
+    "project_id": "communication-4fe24",
+    "storage_bucket": "communication-4fe24.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:309511414057:android:24a746128296b9ce565738",
+        "android_client_info": {
+          "package_name": "com.xpertbot.secure_communication"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDzgMojV1J8SXt6R-zAKfLcecSiNmlIDqA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
